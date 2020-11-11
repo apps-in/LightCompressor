@@ -5,6 +5,7 @@ import android.media.MediaCodecList.REGULAR_CODECS
 import android.util.Log
 import java.io.File
 import java.nio.ByteBuffer
+import kotlin.math.max
 import kotlin.math.roundToInt
 
 
@@ -15,7 +16,7 @@ import kotlin.math.roundToInt
 
 object Compressor {
 
-    private const val MIN_BITRATE = 2000000
+    private const val MIN_BITRATE = 400_000
     private const val MIN_HEIGHT = 640.0
     private const val MIN_WIDTH = 360.0
     private const val FRAME_RATE = 30
@@ -34,8 +35,6 @@ object Compressor {
         source: String,
         destination: String,
         quality: VideoQuality,
-        isMinBitRateEnabled: Boolean,
-        keepOriginalResolution: Boolean,
         listener: CompressionProgressListener,
     ): Result {
 
@@ -104,10 +103,6 @@ object Compressor {
         val bitrate = bitrateData.toInt()
         val duration = durationData.toLong() * 1000
 
-        // Check for a min video bitrate before compression
-        // Note: this is an experimental value
-        if (isMinBitRateEnabled && bitrate <= MIN_BITRATE)
-            return Result(success = false, failureMessage = INVALID_BITRATE)
 
         //Handle new bitrate value
         val newBitrate = getBitrate(bitrate, quality)
@@ -116,7 +111,7 @@ object Compressor {
         var (newWidth, newHeight) = generateWidthAndHeight(
             width,
             height,
-            keepOriginalResolution
+            quality
         )
 
         //Handle rotation values and swapping height and width if needed
@@ -463,11 +458,11 @@ object Compressor {
     ): Int {
 
         return when (quality) {
-            VideoQuality.VERY_LOW -> (bitrate * 0.08).roundToInt()
-            VideoQuality.LOW -> (bitrate * 0.1).roundToInt()
-            VideoQuality.MEDIUM -> (bitrate * 0.2).roundToInt()
-            VideoQuality.HIGH -> (bitrate * 0.3).roundToInt()
-            VideoQuality.VERY_HIGH -> (bitrate * 0.5).roundToInt()
+            VideoQuality.VERY_LOW -> 400_000
+            VideoQuality.LOW -> 700_000
+            VideoQuality.MEDIUM -> 1_500_000
+            VideoQuality.HIGH -> 2_500_000
+            VideoQuality.VERY_HIGH -> 4_000_000
         }
     }
 
@@ -480,37 +475,47 @@ object Compressor {
     private fun generateWidthAndHeight(
         width: Double,
         height: Double,
-        keepOriginalResolution: Boolean,
+        quality: VideoQuality,
     ): Pair<Int, Int> {
 
-        if (keepOriginalResolution) {
-            return Pair(width.roundToInt(), height.roundToInt())
-        }
+        var newWidth = width.roundToInt()
+        var newHeight = height.roundToInt()
 
-        val newWidth: Int
-        val newHeight: Int
-
-        when {
-            width >= 1920 || height >= 1920 -> {
-                newWidth = (((width * 0.5) / 16).roundToInt() * 16)
-                newHeight = (((height * 0.5) / 16f).roundToInt() * 16)
-            }
-            width >= 1280 || height >= 1280 -> {
-                newWidth = (((width * 0.75) / 16).roundToInt() * 16)
-                newHeight = (((height * 0.75) / 16).roundToInt() * 16)
-            }
-            width >= 960 || height >= 960 -> {
-                if (width > height) {
-                    newWidth = (((MIN_HEIGHT * 0.95) / 16).roundToInt() * 16)
-                    newHeight = (((MIN_WIDTH * 0.95) / 16).roundToInt() * 16)
-                } else {
-                    newWidth = (((MIN_WIDTH * 0.95) / 16).roundToInt() * 16)
-                    newHeight = (((MIN_HEIGHT * 0.95) / 16).roundToInt() * 16)
+        when (quality){
+            VideoQuality.VERY_HIGH -> {
+                if (width > 1920 || height > 1920) {
+                    val factor = max(width, height) / 1920
+                    newWidth = (width / factor).roundToInt()
+                    newHeight = (height / factor).roundToInt()
                 }
             }
-            else -> {
-                newWidth = (((width * 0.9) / 16).roundToInt() * 16)
-                newHeight = (((height * 0.9) / 16).roundToInt() * 16)
+            VideoQuality.HIGH -> {
+                if (width > 1280 || height > 1280) {
+                    val factor = max(width, height) / 1280
+                    newWidth = (width / factor).roundToInt()
+                    newHeight = (height / factor).roundToInt()
+                }
+            }
+            VideoQuality.MEDIUM -> {
+                if (width > 1024 || height > 1024) {
+                    val factor = max(width, height) / 1024
+                    newWidth = (width / factor).roundToInt()
+                    newHeight = (height / factor).roundToInt()
+                }
+            }
+            VideoQuality.LOW -> {
+                if (width > 480 || height > 480) {
+                    val factor = max(width, height) / 480
+                    newWidth = (width / factor).roundToInt()
+                    newHeight = (height / factor).roundToInt()
+                }
+            }
+            VideoQuality.VERY_LOW -> {
+                if (width > 320 || height > 320) {
+                    val factor = max(width, height) / 320
+                    newWidth = (width / factor).roundToInt()
+                    newHeight = (height / factor).roundToInt()
+                }
             }
         }
 

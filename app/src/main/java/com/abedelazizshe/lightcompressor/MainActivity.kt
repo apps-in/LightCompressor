@@ -148,8 +148,6 @@ class MainActivity : AppCompatActivity() {
                                         }
                                     },
                                     VideoQuality.MEDIUM,
-                                    isMinBitRateEnabled = true,
-                                    keepOriginalResolution = false,
                                 )
                             }
                         }
