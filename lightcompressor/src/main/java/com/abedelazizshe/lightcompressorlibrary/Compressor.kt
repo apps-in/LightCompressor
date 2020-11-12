@@ -24,6 +24,18 @@ object Compressor {
     private const val MIME_TYPE = "video/avc"
     private const val MEDIACODEC_TIMEOUT_DEFAULT = 5000L
 
+    const val BITRATE_VERY_HIGH = 4_000_000
+    const val BITRATE_HIGH = 2_500_000
+    const val BITRATE_MEDIUM = 1_000_000
+    const val BITRATE_LOW = 700_000
+    const val BITRATE_VERY_LOW = 400_000
+
+    const val SIZE_VERY_HIGH = 1920
+    const val SIZE_HIGH = 1280
+    const val SIZE_MEDIUM = 640
+    const val SIZE_LOW = 480
+    const val SIZE_VERY_LOW = 320
+
     private const val INVALID_BITRATE =
         "The provided bitrate is smaller than what is needed for compression " +
                 "try to set isMinBitRateEnabled to false"
@@ -100,12 +112,11 @@ object Compressor {
         }
 
         var rotation = rotationData.toInt()
-        val bitrate = bitrateData.toInt()
         val duration = durationData.toLong() * 1000
 
 
         //Handle new bitrate value
-        val newBitrate = getBitrate(bitrate, quality)
+        val newBitrate = getBitrate(quality)
 
         //Handle new width and height values
         var (newWidth, newHeight) = generateWidthAndHeight(
@@ -453,16 +464,15 @@ object Compressor {
      * @return new smaller bitrate value
      */
     private fun getBitrate(
-        bitrate: Int,
         quality: VideoQuality,
     ): Int {
 
         return when (quality) {
-            VideoQuality.VERY_LOW -> 400_000
-            VideoQuality.LOW -> 700_000
-            VideoQuality.MEDIUM -> 1_500_000
-            VideoQuality.HIGH -> 2_500_000
-            VideoQuality.VERY_HIGH -> 4_000_000
+            VideoQuality.VERY_LOW -> BITRATE_VERY_LOW
+            VideoQuality.LOW -> BITRATE_LOW
+            VideoQuality.MEDIUM -> BITRATE_MEDIUM
+            VideoQuality.HIGH -> BITRATE_HIGH
+            VideoQuality.VERY_HIGH -> BITRATE_VERY_HIGH
         }
     }
 
@@ -483,36 +493,36 @@ object Compressor {
 
         when (quality){
             VideoQuality.VERY_HIGH -> {
-                if (width > 1920 || height > 1920) {
-                    val factor = max(width, height) / 1920
+                if (width > SIZE_VERY_HIGH || height > SIZE_VERY_HIGH) {
+                    val factor = max(width, height) / SIZE_VERY_HIGH
                     newWidth = (width / factor).roundToInt()
                     newHeight = (height / factor).roundToInt()
                 }
             }
             VideoQuality.HIGH -> {
-                if (width > 1280 || height > 1280) {
-                    val factor = max(width, height) / 1280
+                if (width > SIZE_HIGH || height > SIZE_HIGH) {
+                    val factor = max(width, height) / SIZE_HIGH
                     newWidth = (width / factor).roundToInt()
                     newHeight = (height / factor).roundToInt()
                 }
             }
             VideoQuality.MEDIUM -> {
-                if (width > 1024 || height > 1024) {
-                    val factor = max(width, height) / 1024
+                if (width > SIZE_MEDIUM || height > SIZE_MEDIUM) {
+                    val factor = max(width, height) / SIZE_MEDIUM
                     newWidth = (width / factor).roundToInt()
                     newHeight = (height / factor).roundToInt()
                 }
             }
             VideoQuality.LOW -> {
-                if (width > 480 || height > 480) {
-                    val factor = max(width, height) / 480
+                if (width > SIZE_LOW || height > SIZE_LOW) {
+                    val factor = max(width, height) / SIZE_LOW
                     newWidth = (width / factor).roundToInt()
                     newHeight = (height / factor).roundToInt()
                 }
             }
             VideoQuality.VERY_LOW -> {
-                if (width > 320 || height > 320) {
-                    val factor = max(width, height) / 320
+                if (width > SIZE_VERY_LOW || height > SIZE_VERY_LOW) {
+                    val factor = max(width, height) / SIZE_VERY_LOW
                     newWidth = (width / factor).roundToInt()
                     newHeight = (height / factor).roundToInt()
                 }
